@@ -1,0 +1,129 @@
+#define echoPin 12 //connect echo pin of ultrasonic sensor to D12 of Arduino
+#define trigPin 11 //connect trigger pin of ultrasonic sensor to D10 of Arduino
+long duration; // declare variables to hold duration and distance
+int distance;
+#include <SoftwareSerial.h>
+#include <TinyGPS.h>
+float lat = 13.1334,lon = 77.5674; // create variable for latitude and longitude object
+SoftwareSerial gpsSerial(8,9);//rx,tx
+TinyGPS gps; // create gps object
+void forward(void);
+void setup()
+{
+pinMode(2,INPUT);
+pinMode(3,OUTPUT);
+Serial.begin(9600); //set the baud rate of serial communication to 9600
+pinMode(trigPin,OUTPUT); //set trigPin as output pin of Arduino
+pinMode(echoPin,INPUT); //set echoPin as output pin of Arduino
+pinMode(4,OUTPUT);
+pinMode(5,OUTPUT);
+pinMode(6,OUTPUT);
+pinMode(7,OUTPUT);
+pinMode(13,OUTPUT);
+
+}
+void loop()
+{
+Serial.println("SHIP MONITORING SYSTEM");
+delay(1000);
+digitalWrite(trigPin,LOW); //generate square wave at trigger pin
+delayMicroseconds(2);
+digitalWrite(trigPin,HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin,LOW);
+duration=pulseIn(echoPin,HIGH);//calculation of distance of obstacle
+distance=(duration*0.034/2);
+//Serial.println(duration);
+Serial.print("Distance : ");
+Serial.print(distance);
+Serial.println(" cm ");
+delay(3000);
+if((distance>4)&&(distance<50))
+{
+digitalWrite(3,HIGH);
+delay(3000);
+digitalWrite(3,LOW);
+digitalWrite(4,HIGH);
+
+digitalWrite(5,LOW);
+digitalWrite(6,LOW);
+digitalWrite(7,HIGH);
+delay(5000);
+digitalWrite(5,HIGH);
+digitalWrite(4,LOW);
+digitalWrite(6,HIGH);
+digitalWrite(7,LOW);
+delay(5000);
+forward();
+}
+if(distance<=3)
+{
+digitalWrite(13,LOW);
+delay(100);
+digitalWrite(13,HIGH);
+delay(100);
+}
+Serial.println("WAITING FOR THE ICE BERG DETECTION");
+delay(2000);
+if(Serial.available()>0)
+{
+char s=Serial.read();
+
+Serial.println(s);
+if(s=='A')
+{
+Serial.println("ICE BERG DETECTED");
+delay(2000);
+}
+}
+int A=digitalRead(10);
+if(A==LOW)
+{
+digitalWrite(3,HIGH);
+delay(3000);
+Serial.println("OBJECT DETECTED");
+digitalWrite(3,LOW);
+digitalWrite(4,HIGH);
+digitalWrite(5,LOW);
+
+digitalWrite(6,LOW);
+digitalWrite(7,HIGH);
+delay(5000);
+digitalWrite(5,HIGH);
+digitalWrite(4,LOW);
+digitalWrite(6,HIGH);
+
+digitalWrite(7,LOW);
+delay(5000);
+}
+while(gpsSerial.available()){ // check for gps data
+if(gps.encode(gpsSerial.read()))// encode gps data
+{
+gps.f_get_position(&lat,&lon); // get latitude and longitude
+// display position
+Serial.print("Position: ");
+Serial.print("Latitude:");
+Serial.print(lat,6);
+Serial.print(";");
+Serial.print("Longitude:");
+Serial.println(lon,6);
+}
+}
+String latitude = String(lat,6);
+String longitude = String(lon,6);
+Serial.println(latitude+";"+longitude);
+delay(1000);
+forward();
+}
+void forward(void)
+
+{
+for(int i=0;i<5;i++)
+{
+digitalWrite(4,HIGH);
+digitalWrite(5,LOW);
+digitalWrite(6,HIGH);
+
+digitalWrite(7,LOW);
+}
+}
